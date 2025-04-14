@@ -1,0 +1,242 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useSettings } from '@/context/SettingsContext';
+import styles from './LLMSettings.module.css';
+
+const LLMSettings = () => {
+  const { settings, updateLLMSettings } = useSettings();
+  const [formValues, setFormValues] = useState({
+    provider: 'azure',
+    endpoint: '',
+    api_key: '',
+    deployment_name: '',
+    api_version: '2023-05-15',
+    temperature: 0.7,
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(null);
+
+  // 初期値をセット
+  useEffect(() => {
+    if (settings?.llm) {
+      setFormValues({
+        provider: settings.llm.provider || 'azure',
+        endpoint: settings.llm.endpoint || '',
+        api_key: settings.llm.api_key || '',
+        deployment_name: settings.llm.deployment_name || '',
+        api_version: settings.llm.api_version || '2023-05-15',
+        temperature: settings.llm.temperature || 0.7,
+      });
+    }
+  }, [settings]);
+
+  // 入力変更ハンドラ
+  const handleChange = (e) => {
+    const { name, value, type } = e.target;
+    
+    setFormValues(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) : value,
+    }));
+  };
+
+  // フォーム送信ハンドラ
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+      
+      const success = await updateLLMSettings(formValues);
+      
+      if (success) {
+        setSaveMessage({ type: 'success', text: '設定を保存しました' });
+      } else {
+        setSaveMessage({ type: 'error', text: '設定の保存に失敗しました' });
+      }
+    } catch (error) {
+      console.error('設定保存エラー:', error);
+      setSaveMessage({ type: 'error', text: 'エラー: ' + error.message });
+    } finally {
+      setIsSaving(false);
+      
+      // 3秒後にメッセージを消す
+      setTimeout(() => {
+        setSaveMessage(null);
+      }, 3000);
+    }
+  };
+
+  return (
+    <div className={styles.container}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.formSection}>
+          <h3 className={styles.sectionTitle}>LLMプロバイダー</h3>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              <input
+                type="radio"
+                name="provider"
+                value="azure"
+                checked={formValues.provider === 'azure'}
+                onChange={handleChange}
+                className={styles.radio}
+              />
+              Azure OpenAI
+            </label>
+            
+            <label className={styles.label}>
+              <input
+                type="radio"
+                name="provider"
+                value="local"
+                checked={formValues.provider === 'local'}
+                onChange={handleChange}
+                className={styles.radio}
+              />
+              ローカルLLM
+            </label>
+          </div>
+        </div>
+        
+        {formValues.provider === 'azure' ? (
+          <div className={styles.formSection}>
+            <h3 className={styles.sectionTitle}>Azure OpenAI設定</h3>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="endpoint">
+                エンドポイント URL
+              </label>
+              <input
+                type="text"
+                id="endpoint"
+                name="endpoint"
+                value={formValues.endpoint}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="https://your-resource-name.openai.azure.com/"
+                required
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="api_key">
+                API キー
+              </label>
+              <input
+                type="password"
+                id="api_key"
+                name="api_key"
+                value={formValues.api_key}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="your-api-key"
+                required
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="deployment_name">
+                デプロイメント名
+              </label>
+              <input
+                type="text"
+                id="deployment_name"
+                name="deployment_name"
+                value={formValues.deployment_name}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="your-deployment"
+                required
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="api_version">
+                API バージョン
+              </label>
+              <input
+                type="text"
+                id="api_version"
+                name="api_version"
+                value={formValues.api_version}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="2023-05-15"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className={styles.formSection}>
+            <h3 className={styles.sectionTitle}>ローカルLLM設定</h3>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="endpoint">
+                エンドポイント URL
+              </label>
+              <input
+                type="text"
+                id="endpoint"
+                name="endpoint"
+                value={formValues.endpoint}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="http://localhost:8000"
+                required
+              />
+              <p className={styles.helpText}>
+                ローカルLLMのホストとポート (例: http://localhost:8000)
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <div className={styles.formSection}>
+          <h3 className={styles.sectionTitle}>共通設定</h3>
+          
+          <div className={styles.formGroup}>
+            <label className={styles.label} htmlFor="temperature">
+              Temperature: {formValues.temperature}
+            </label>
+            <input
+              type="range"
+              id="temperature"
+              name="temperature"
+              min="0"
+              max="1"
+              step="0.1"
+              value={formValues.temperature}
+              onChange={handleChange}
+              className={styles.rangeInput}
+            />
+            <div className={styles.rangeLabels}>
+              <span>精確 (0)</span>
+              <span>創造的 (1)</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className={styles.formActions}>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSaving}
+          >
+            {isSaving ? '保存中...' : '設定を保存'}
+          </button>
+          
+          {saveMessage && (
+            <div className={`${styles.saveMessage} ${styles[saveMessage.type]}`}>
+              {saveMessage.text}
+            </div>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default LLMSettings;

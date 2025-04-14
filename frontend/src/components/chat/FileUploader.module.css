@@ -1,0 +1,91 @@
+.container {
+  position: relative;
+  margin-right: 0.5rem;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.uploadButton:hover {
+  background-color: rgba(0, 102, 204, 0.05);
+}
+
+.fileList {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 300px;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid var(--light-gray);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  z-index: 10;
+}
+
+.fileItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+  background-color: #f5f9ff;
+}
+
+.fileItem:last-child {
+  margin-bottom: 0;
+}
+
+.fileName {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.removeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: none;
+  font-size: 0.85rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}

@@ -1,0 +1,100 @@
+.messageItem {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  max-width: 85%;
+  animation: fadeIn 0.3s;
+}
+
+.messageContent {
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  position: relative;
+}
+
+.messageText p {
+  margin-bottom: 0.5rem;
+}
+
+.messageText p:last-child {
+  margin-bottom: 0;
+}
+
+.messageTime {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.25rem;
+  align-self: flex-end;
+}
+
+.user {
+  align-self: flex-end;
+}
+
+.user .messageContent {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.ai {
+  align-self: flex-start;
+}
+
+.ai .messageContent {
+  background-color: #f0f0f0;
+}
+
+.system {
+  align-self: center;
+  max-width: 60%;
+}
+
+.system .messageContent {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #666;
+  font-style: italic;
+}
+
+.error .messageContent {
+  background-color: #fff3f3;
+  border: 1px solid #ffcccc;
+  color: #e53935;
+}
+
+.fileAttachments {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.fileName {
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.fileSize {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.75rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
