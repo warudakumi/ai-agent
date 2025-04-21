@@ -5,6 +5,7 @@
   position: relative;
   width: 100%;
   overflow-y: auto;
+  padding-bottom: 90px; /* 固定入力欄の高さ + パディング分を確保 */
 }
 
 .messageList {
@@ -102,5 +103,6 @@
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 15px;
+  padding: 0;
+  display: none; /* 固定入力欄を使用するため、通常の入力欄は非表示 */
 }

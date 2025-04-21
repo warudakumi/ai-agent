@@ -17,7 +17,7 @@ export default function ChatPage() {
       <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
       <div className={styles.content}>
         <main className={styles.main}>
-          <ChatArea />
+          <ChatArea isSidebarOpen={isSidebarOpen} />
         </main>
       </div>
     </div>

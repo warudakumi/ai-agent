@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import MessageItem from './MessageItem';
 import InputArea from './InputArea';
 import apiService from '@/services/api';
 import styles from './ChatArea.module.css';
 
-const ChatArea = () => {
+// サイドバーの状態を親コンポーネントから受け取る
+const ChatArea = ({ isSidebarOpen }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
@@ -72,42 +73,63 @@ const ChatArea = () => {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className={styles.chatContainer}>
-      <div className={styles.messageList}>
-        {!hasMessages ? (
-          <div className={styles.emptyState}>
-            <h2>AIエージェント</h2>
-            <p>質問や指示を入力して、会話を始めましょう。</p>
-            <div className={styles.centeredInputArea}>
-              <InputArea onSendMessage={handleSendMessage} disabled={isLoading} centered={true} />
-            </div>
-          </div>
-        ) : (
-          <>
-            {messages.map((msg) => (
-              <MessageItem key={msg.id} message={msg} />
-            ))}
-            {isLoading && (
-              <div className={styles.thinking}>
-                <div className={styles.dots}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <p>AIが考え中...</p>
+    <>
+      <div className={styles.chatContainer}>
+        <div className={styles.messageList}>
+          {!hasMessages ? (
+            <div className={styles.emptyState}>
+              <h2>AIエージェント</h2>
+              <p>質問や指示を入力して、会話を始めましょう。</p>
+              <div className={styles.centeredInputArea}>
+                <InputArea 
+                  onSendMessage={handleSendMessage} 
+                  disabled={isLoading} 
+                  centered={true}
+                  isSidebarOpen={isSidebarOpen}
+                />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </>
-        )}
+            </div>
+          ) : (
+            <>
+              {messages.map((msg) => (
+                <MessageItem key={msg.id} message={msg} />
+              ))}
+              {isLoading && (
+                <div className={styles.thinking}>
+                  <div className={styles.dots}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p>AIが考え中...</p>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
+        
+        {/* メッセージリスト内の入力欄は非表示 */}
+        <div className={styles.inputAreaWrapper}>
+          <InputArea 
+            onSendMessage={handleSendMessage} 
+            disabled={isLoading} 
+            centered={false}
+            isSidebarOpen={isSidebarOpen}
+          />
+        </div>
       </div>
       
+      {/* 画面下部に固定表示される入力欄 */}
       {hasMessages && (
-        <div className={styles.inputAreaWrapper}>
-          <InputArea onSendMessage={handleSendMessage} disabled={isLoading} centered={false} />
-        </div>
+        <InputArea 
+          onSendMessage={handleSendMessage} 
+          disabled={isLoading} 
+          centered={false}
+          isSidebarOpen={isSidebarOpen}
+        />
       )}
-    </div>
+    </>
   );
 };
 

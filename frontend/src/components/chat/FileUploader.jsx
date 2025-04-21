@@ -13,13 +13,6 @@ const FileUploader = ({ onFilesSelected }) => {
     onFilesSelected([...selectedFiles, ...files]);
   };
 
-  const removeFile = (index) => {
-    const newFiles = [...selectedFiles];
-    newFiles.splice(index, 1);
-    setSelectedFiles(newFiles);
-    onFilesSelected(newFiles);
-  };
-
   const handleClick = () => {
     fileInputRef.current.click();
   };
@@ -41,22 +34,6 @@ const FileUploader = ({ onFilesSelected }) => {
       >
         <span>ファイル添付</span>
       </button>
-      
-      {selectedFiles.length > 0 && (
-        <div className={styles.fileList}>
-          {selectedFiles.map((file, idx) => (
-            <div key={idx} className={styles.fileItem}>
-              <span className={styles.fileName}>{file.name}</span>
-              <button 
-                className={styles.removeButton}
-                onClick={() => removeFile(idx)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
