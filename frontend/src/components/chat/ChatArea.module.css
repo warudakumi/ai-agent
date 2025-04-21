@@ -4,17 +4,18 @@
   height: 100%;
   position: relative;
   width: 100%;
+  overflow-y: auto;
 }
 
 .messageList {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  overflow-y: visible;
 }
 
 /* AIメッセージの配置を調整するためのクラス */
