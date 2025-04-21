@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import FileUploader from './FileUploader';
 import styles from './InputArea.module.css';
 
-const InputArea = ({ onSendMessage, disabled }) => {
+const InputArea = ({ onSendMessage, disabled, centered = false }) => {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState([]);
 
@@ -27,7 +27,7 @@ const InputArea = ({ onSendMessage, disabled }) => {
   };
 
   return (
-    <div className={styles.inputAreaContainer}>
+    <div className={`${styles.inputAreaContainer} ${centered ? styles.centered : ''}`}>
       <form onSubmit={handleSubmit} className={styles.inputForm}>
         <FileUploader onFilesSelected={handleFilesSelected} />
         
@@ -39,6 +39,7 @@ const InputArea = ({ onSendMessage, disabled }) => {
             placeholder="メッセージを入力（Ctrl+Enterで送信）..."
             className={styles.textarea}
             disabled={disabled}
+            rows={centered ? 3 : 1}
           />
         </div>
         

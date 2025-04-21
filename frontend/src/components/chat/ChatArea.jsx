@@ -69,32 +69,44 @@ const ChatArea = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const hasMessages = messages.length > 0;
+
   return (
     <div className={styles.chatContainer}>
       <div className={styles.messageList}>
-        {messages.length === 0 ? (
+        {!hasMessages ? (
           <div className={styles.emptyState}>
             <h2>AIエージェント</h2>
             <p>質問や指示を入力して、会話を始めましょう。</p>
+            <div className={styles.centeredInputArea}>
+              <InputArea onSendMessage={handleSendMessage} disabled={isLoading} centered={true} />
+            </div>
           </div>
         ) : (
-          messages.map((msg) => (
-            <MessageItem key={msg.id} message={msg} />
-          ))
+          <>
+            {messages.map((msg) => (
+              <MessageItem key={msg.id} message={msg} />
+            ))}
+            {isLoading && (
+              <div className={styles.thinking}>
+                <div className={styles.dots}>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p>AIが考え中...</p>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </>
         )}
-        {isLoading && (
-          <div className={styles.thinking}>
-            <div className={styles.dots}>
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <p>AIが考え中...</p>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
       </div>
-      <InputArea onSendMessage={handleSendMessage} disabled={isLoading} />
+      
+      {hasMessages && (
+        <div className={styles.inputAreaWrapper}>
+          <InputArea onSendMessage={handleSendMessage} disabled={isLoading} centered={false} />
+        </div>
+      )}
     </div>
   );
 };
