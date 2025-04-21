@@ -1,29 +1,33 @@
 from typing import Any, Dict, List
 
 from langchain.memory import ConversationBufferMemory
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 
 class AgentMemory:
     """エージェントのメモリクラス"""
 
     def __init__(self):
-        self.memory = ConversationBufferMemory(return_messages=True)
+        self.chat_history = ChatMessageHistory()
+        self.memory = ConversationBufferMemory(
+            chat_memory=self.chat_history, return_messages=True
+        )
         self.file_contexts = {}  # セッションごとのファイルコンテキスト
 
     def add_user_message(self, session_id: str, message: str) -> None:
         """ユーザーメッセージをメモリに追加"""
         key = f"conversation_{session_id}"
-        self.memory.chat_memory.add_user_message(message)
+        self.chat_history.add_user_message(message)
 
     def add_ai_message(self, session_id: str, message: str) -> None:
         """AIメッセージをメモリに追加"""
         key = f"conversation_{session_id}"
-        self.memory.chat_memory.add_ai_message(message)
+        self.chat_history.add_ai_message(message)
 
     def get_chat_history(self, session_id: str) -> List[Dict[str, Any]]:
         """チャット履歴を取得"""
-        messages = self.memory.chat_memory.messages
+        messages = self.chat_history.messages
 
         history = []
         for msg in messages:
@@ -49,6 +53,6 @@ class AgentMemory:
 
     def clear_session(self, session_id: str) -> None:
         """セッションの履歴をクリア"""
-        self.memory.chat_memory.clear()
+        self.chat_history.clear()
         if session_id in self.file_contexts:
             del self.file_contexts[session_id]

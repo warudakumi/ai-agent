@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional, TypedDict
 
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 from loguru import logger
 
@@ -109,7 +109,7 @@ def create_workflow(agent, tools):
             prompt_messages.append(SystemMessage(content=think_instruction))
 
             # LLMで思考生成
-            thought_response = agent(prompt_messages)
+            thought_response = agent.invoke(prompt_messages)
 
             # 思考を状態に保存
             state["current_thought"] = thought_response.content
@@ -176,7 +176,7 @@ def create_workflow(agent, tools):
             ]
 
             # ツール選択の応答
-            tool_selection_response = agent(tool_selection_prompt)
+            tool_selection_response = agent.invoke(tool_selection_prompt)
             tool_selection_text = tool_selection_response.content
 
             # JSON部分を抽出
@@ -295,7 +295,7 @@ def create_workflow(agent, tools):
             ]
 
             # 最終応答の生成
-            response = agent(response_prompt)
+            response = agent.invoke(response_prompt)
 
             # 応答を状態に保存
             state["final_response"] = response.content

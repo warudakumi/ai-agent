@@ -2,7 +2,8 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from langchain.llms.base import LLM
-from langchain_community.chat_models import AzureChatOpenAI, ChatOpenAI
+from langchain_community.chat_models import AzureChatOpenAI
+from langchain_openai import ChatOpenAI
 from loguru import logger
 
 
