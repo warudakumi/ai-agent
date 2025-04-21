@@ -13,7 +13,7 @@ export default function ChatPage() {
   };
   
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isSidebarOpen ? styles.sidebarOpen : ''}`}>
       <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
       <div className={styles.content}>
         <main className={styles.main}>

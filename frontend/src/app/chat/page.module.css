@@ -10,6 +10,11 @@
   flex-direction: column;
   width: 100%;
   transition: margin-left 0.3s ease-in-out;
+  margin-left: 0; /* サイドバーが閉じているときのマージン */
+}
+
+.sidebarOpen .content {
+  margin-left: 250px; /* サイドバーが開いているときのマージン（サイドバーの幅と同じ） */
 }
 
 .main {

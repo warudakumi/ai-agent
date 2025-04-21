@@ -8,7 +8,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
+  z-index: 10;
   transition: transform 0.3s ease-in-out;
 }
 
@@ -63,7 +63,7 @@
   position: fixed;
   left: 10px;
   top: 10px;
-  z-index: 200;
+  z-index: 20;
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 50%;
@@ -89,12 +89,14 @@
   position: relative;
   width: 18px;
   height: 2px;
+  background-color: transparent;
 }
 
 .toggleIcon::before,
 .toggleIcon::after {
   content: '';
   position: absolute;
+  left: 0;
   width: 18px;
   height: 2px;
   background-color: #495057;
@@ -102,25 +104,25 @@
 }
 
 .toggleIcon::before {
-  transform: translateY(-6px);
+  transform: translateY(-5px);
 }
 
 .toggleIcon::after {
-  transform: translateY(6px);
+  transform: translateY(5px);
 }
 
 .toggleButton.open .toggleIcon::before {
-  transform: rotate(45deg);
+  transform: translateY(0) rotate(45deg);
 }
 
 .toggleButton.open .toggleIcon::after {
-  transform: rotate(-45deg);
+  transform: translateY(0) rotate(-45deg);
 }
 
 .toggleButton.closed .toggleIcon::before {
-  transform: translateY(-6px);
+  transform: translateY(-5px);
 }
 
 .toggleButton.closed .toggleIcon::after {
-  transform: translateY(6px);
+  transform: translateY(5px);
 }
