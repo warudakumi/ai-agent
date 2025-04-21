@@ -6,11 +6,12 @@ import apiService from '@/services/api';
 // デフォルト設定
 const defaultSettings = {
   llm: {
-    provider: 'azure', // azure または local
+    provider: 'azure', // azure、openai または local
     endpoint: '',
     api_key: '',
     deployment_name: '',
     api_version: '2023-05-15',
+    model_name: 'gpt-3.5-turbo', // OpenAI用モデル名
     temperature: 0.7,
   },
   msgraph: {

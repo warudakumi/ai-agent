@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from langchain.llms.base import LLM
-from langchain_community.chat_models import AzureChatOpenAI
+from langchain_community.chat_models import AzureChatOpenAI, ChatOpenAI
 from loguru import logger
 
 
@@ -79,6 +79,16 @@ def get_llm(config: Dict[str, Any]) -> LLM:
         except Exception as e:
             logger.error(f"Azure OpenAI初期化エラー: {str(e)}")
             raise ValueError(f"Azure OpenAIの初期化に失敗しました: {str(e)}")
+    elif provider == "openai":
+        try:
+            return ChatOpenAI(
+                model_name=config.get("model_name", "gpt-3.5-turbo"),
+                openai_api_key=config.get("api_key", ""),
+                temperature=float(config.get("temperature", 0.7)),
+            )
+        except Exception as e:
+            logger.error(f"OpenAI初期化エラー: {str(e)}")
+            raise ValueError(f"OpenAIの初期化に失敗しました: {str(e)}")
     else:
         # ローカルLLM
         return LocalLLM(

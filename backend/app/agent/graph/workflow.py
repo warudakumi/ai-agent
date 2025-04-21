@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict, List, Optional, TypedDict
 
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, START, StateGraph
 from loguru import logger
 
 
@@ -314,6 +314,7 @@ def create_workflow(agent, tools):
     workflow.add_node("generate_response", generate_response)
 
     # エッジの定義
+    workflow.add_edge(START, "process_input")
     workflow.add_edge("process_input", "generate_thought")
     workflow.add_edge("generate_thought", "execute_tools")
     workflow.add_edge("execute_tools", "generate_response")

@@ -12,6 +12,7 @@ const LLMSettings = () => {
     api_key: '',
     deployment_name: '',
     api_version: '2023-05-15',
+    model_name: 'gpt-3.5-turbo',
     temperature: 0.7,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -26,6 +27,7 @@ const LLMSettings = () => {
         api_key: settings.llm.api_key || '',
         deployment_name: settings.llm.deployment_name || '',
         api_version: settings.llm.api_version || '2023-05-15',
+        model_name: settings.llm.model_name || 'gpt-3.5-turbo',
         temperature: settings.llm.temperature || 0.7,
       });
     }
@@ -86,6 +88,18 @@ const LLMSettings = () => {
                 className={styles.radio}
               />
               Azure OpenAI
+            </label>
+            
+            <label className={styles.label}>
+              <input
+                type="radio"
+                name="provider"
+                value="openai"
+                checked={formValues.provider === 'openai'}
+                onChange={handleChange}
+                className={styles.radio}
+              />
+              OpenAI
             </label>
             
             <label className={styles.label}>
@@ -167,6 +181,46 @@ const LLMSettings = () => {
                 className={styles.input}
                 placeholder="2023-05-15"
               />
+            </div>
+          </div>
+        ) : formValues.provider === 'openai' ? (
+          <div className={styles.formSection}>
+            <h3 className={styles.sectionTitle}>OpenAI設定</h3>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="api_key">
+                API キー
+              </label>
+              <input
+                type="password"
+                id="api_key"
+                name="api_key"
+                value={formValues.api_key}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="your-api-key"
+                required
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="model_name">
+                モデル名
+              </label>
+              <select
+                id="model_name"
+                name="model_name"
+                value={formValues.model_name}
+                onChange={handleChange}
+                className={styles.select}
+                required
+              >
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-4o">GPT-4o</option>
+              </select>
             </div>
           </div>
         ) : (

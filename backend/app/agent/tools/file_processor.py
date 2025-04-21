@@ -24,7 +24,7 @@ class FileProcessorTool(BaseAgentTool):
         """
         try:
             # 入力をパース
-            inputs = json.loads(input_str)
+            inputs = json.loads(input_str) if isinstance(input_str, str) else input_str
             file_path = inputs.get("file_path")
             operation = inputs.get("operation", "summarize")
 
@@ -33,6 +33,7 @@ class FileProcessorTool(BaseAgentTool):
 
             # ファイル拡張子の取得
             file_ext = os.path.splitext(file_path)[1].lower()
+            print(file_ext)
 
             # ファイルタイプに応じた処理
             if file_ext == ".csv":
