@@ -10,6 +10,19 @@ const MessageItem = ({ message }) => {
     minute: '2-digit',
   }).format(new Date(timestamp));
 
+  // AIメッセージをドキュメント形式で表示する処理
+  const renderContent = () => {
+    if (sender === 'ai') {
+      return formatDocumentStyle(content);
+    } else {
+      return (
+        <div className={styles.messageText}>
+          {formatMessage(content)}
+        </div>
+      );
+    }
+  };
+
   return (
     <div className={`${styles.messageItem} ${styles[sender]} ${isError ? styles.error : ''}`}>
       <div className={styles.messageContent}>
@@ -26,9 +39,7 @@ const MessageItem = ({ message }) => {
         )}
         
         {/* メッセージ本文 */}
-        <div className={styles.messageText}>
-          {formatMessage(content)}
-        </div>
+        {renderContent()}
       </div>
       
       <div className={styles.messageTime}>{formattedTime}</div>
@@ -43,7 +54,7 @@ const formatFileSize = (bytes) => {
   else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-// メッセージをフォーマット（改行やコードブロックなど）
+// 通常のメッセージをフォーマット（改行やコードブロックなど）
 const formatMessage = (text) => {
   if (!text) return '';
 
@@ -53,6 +64,22 @@ const formatMessage = (text) => {
   return lines.map((line, i) => (
     <p key={i}>{line || '\u00A0'}</p>
   ));
+};
+
+// AIメッセージをドキュメントスタイルでフォーマット
+const formatDocumentStyle = (text) => {
+  if (!text) return '';
+
+  // 行ごとに処理
+  const lines = text.split('\n');
+  
+  return (
+    <div className={styles.messageText}>
+      {lines.map((line, i) => (
+        <p key={i}>{line || '\u00A0'}</p>
+      ))}
+    </div>
+  );
 };
 
 export default MessageItem;

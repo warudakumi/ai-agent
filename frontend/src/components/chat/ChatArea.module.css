@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   position: relative;
+  width: 100%;
 }
 
 .messageList {
@@ -11,6 +12,15 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* AIメッセージの配置を調整するためのクラス */
+.messageList > *:not(.emptyState) {
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .emptyState {
@@ -51,6 +61,7 @@
   background-color: #f8f9fa;
   border-radius: 8px;
   align-self: flex-start;
+  max-width: 80%;
 }
 
 .dots {
@@ -88,4 +99,7 @@
 
 .inputAreaWrapper {
   width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 15px;
 }
