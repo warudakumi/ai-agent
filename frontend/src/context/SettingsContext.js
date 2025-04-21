@@ -41,7 +41,17 @@ export const SettingsProvider = ({ children }) => {
         const savedSettings = localStorage.getItem('agent_settings');
         
         if (savedSettings) {
-          setSettings(JSON.parse(savedSettings));
+          const parsedSettings = JSON.parse(savedSettings);
+          setSettings(parsedSettings);
+          
+          // ローカルストレージから読み込んだ設定をバックエンドにも送信
+          try {
+            await apiService.settings.saveLLMSettings(parsedSettings.llm);
+            await apiService.settings.saveMSGraphSettings(parsedSettings.msgraph);
+            console.log('ローカルストレージの設定をバックエンドに同期しました');
+          } catch (syncError) {
+            console.warn('ローカルストレージの設定をバックエンドに同期できませんでした:', syncError);
+          }
         } else {
           // APIから設定を取得（APIが実装されている場合）
           try {
