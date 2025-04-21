@@ -5,7 +5,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  width: 100%;
+  width: calc(100% - 250px); /* サイドバーが開いているときの幅を調整 */
   z-index: 100;
   max-width: 900px;
   margin: 0 auto;
@@ -16,7 +16,23 @@
 
 /* サイドバーが開いているときのスタイル */
 .inputAreaContainer.sidebarOpen {
-  transform: translateX(125px); /* サイドバーの幅の半分だけ移動（中央寄せするため） */
+  left: 250px; /* サイドバーの幅分だけ左からずらす */
+  width: calc(100% - 250px); /* サイドバーの幅分を引く */
+  transform: translateX(0); /* transformは使わない */
+}
+
+/* 画面幅が狭い場合のレスポンシブ対応 */
+@media (max-width: 768px) {
+  .inputAreaContainer {
+    width: 100%;
+    left: 0;
+  }
+  
+  .inputAreaContainer.sidebarOpen {
+    left: 0;
+    width: 100%;
+    z-index: 90; /* サイドバーよりも下に表示 */
+  }
 }
 
 .inputAreaContainer.centered {
@@ -30,6 +46,7 @@
   left: auto;
   right: auto;
   padding: 20px;
+  width: 100%; /* 幅を固定 */
   transform: none !important; /* centeredの場合はtransformを上書き */
 }
 

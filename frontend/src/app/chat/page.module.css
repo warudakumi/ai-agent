@@ -22,3 +22,10 @@
   overflow: hidden;
   position: relative;
 }
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .sidebarOpen .content {
+    margin-left: 0; /* モバイル表示時はサイドバーがオーバーレイするため、マージンなし */
+  }
+}

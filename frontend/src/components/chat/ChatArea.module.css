@@ -25,6 +25,17 @@
   padding-right: 15px;
 }
 
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .messageList {
+    padding: 15px 10px;
+  }
+  
+  .chatContainer {
+    padding-bottom: 120px; /* モバイル表示時は入力欄が大きくなる可能性があるため余裕を持たせる */
+  }
+}
+
 .emptyState {
   flex: 1;
   display: flex;
