@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 import pandas as pd
 from app.agent.tools.base import BaseAgentTool
@@ -25,7 +26,7 @@ class FileProcessorTool(BaseAgentTool):
         try:
             # 入力をパース
             inputs = json.loads(input_str) if isinstance(input_str, str) else input_str
-            file_path = inputs.get("file_path")
+            file_path = str(Path(inputs.get("file_path")))
             operation = inputs.get("operation", "summarize")
 
             if not file_path or not os.path.exists(file_path):
@@ -33,7 +34,6 @@ class FileProcessorTool(BaseAgentTool):
 
             # ファイル拡張子の取得
             file_ext = os.path.splitext(file_path)[1].lower()
-            print(file_ext)
 
             # ファイルタイプに応じた処理
             if file_ext == ".csv":
