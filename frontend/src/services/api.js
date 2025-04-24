@@ -3,9 +3,24 @@ import axios from 'axios';
 // デフォルトの設定
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// 現在のホスト名からAPIのベースURLを動的に決定
+// ローカルホストの場合はそのまま、IPアドレスの場合はそのIPアドレスを使用
+function getApiBaseUrl() {
+  if (typeof window !== 'undefined') {
+    // ブラウザ環境の場合
+    const currentHost = window.location.hostname;
+    if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+      // IPアドレスなどでアクセスしている場合
+      return `http://${currentHost}:8000`;
+    }
+  }
+  // それ以外はデフォルト値を使用
+  return API_BASE_URL;
+}
+
 // axios インスタンスの作成
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

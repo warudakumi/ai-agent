@@ -14,7 +14,11 @@ class Settings(BaseSettings):
     api_debug: bool = True
 
     # CORS設定
-    cors_allowed_origins: List[str] = ["http://localhost:3000"]
+    cors_allowed_origins: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://192.168.1.3:3000",
+    ]
 
     # デフォルトLLM設定
     default_llm_provider: str = "azure"
