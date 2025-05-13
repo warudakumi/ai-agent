@@ -41,6 +41,9 @@ def create_workflow(agent, tools):
             if not last_user_message:
                 raise ValueError("ユーザーメッセージが見つかりません")
 
+            # 入力処理ログ
+            logger.debug(f"入力メッセージ: {last_user_message[:100]}...")
+
             # 状態の初期化
             state["current_thought"] = ""
             state["tool_calls"] = []
@@ -115,6 +118,9 @@ def create_workflow(agent, tools):
             # 思考を状態に保存
             state["current_thought"] = thought_response.content
 
+            # 思考内容のログを記録
+            logger.debug(f"生成された思考:\n{thought_response.content}")
+
             return state
 
         except Exception as e:
@@ -180,6 +186,9 @@ def create_workflow(agent, tools):
             tool_selection_response = agent.invoke(tool_selection_prompt)
             tool_selection_text = tool_selection_response.content
 
+            # ツール選択のログを記録
+            logger.debug(f"ツール選択応答:\n{tool_selection_text}")
+
             # JSON部分を抽出
             json_start = tool_selection_text.find("```json")
             json_end = tool_selection_text.rfind("```")
@@ -208,6 +217,9 @@ def create_workflow(agent, tools):
 
             if tool_calls and isinstance(tool_calls, list):
                 state["tool_calls"] = tool_calls
+                logger.debug(
+                    f"選択されたツール: {json.dumps(tool_calls, ensure_ascii=False)}"
+                )
 
                 for tool_call in tool_calls:
                     tool_name = tool_call.get("tool")
@@ -218,6 +230,7 @@ def create_workflow(agent, tools):
 
                     if tool and tool_input:
                         try:
+                            logger.debug(f"ツール実行: {tool_name}, 入力: {tool_input}")
                             # ツールを実行
                             tool_output = tool._run(tool_input)
 
@@ -228,6 +241,10 @@ def create_workflow(agent, tools):
                                     "input": tool_input,
                                     "output": tool_output,
                                 }
+                            )
+
+                            logger.debug(
+                                f"ツール実行結果: {tool_name} -> {tool_output[:200]}..."
                             )
 
                         except Exception as e:
@@ -297,6 +314,9 @@ def create_workflow(agent, tools):
 
             # 最終応答の生成
             response = agent.invoke(response_prompt)
+
+            # 応答内容のログを記録
+            logger.debug(f"生成された最終応答:\n{response.content}")
 
             # 応答を状態に保存
             state["final_response"] = response.content

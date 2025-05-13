@@ -1,10 +1,11 @@
+import json
 from typing import List, Optional
 
 from app.agent.core import AgentManager
 from app.api.dependencies import get_llm_config
 from app.models.chat import ChatResponse, FileUploadResponse
 from app.services.file_service import save_uploaded_file
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
 from loguru import logger
 
 router = APIRouter()
@@ -18,6 +19,7 @@ async def process_message(
     message: str = Form(...),
     files: Optional[List[UploadFile]] = File(None),
     session_id: Optional[str] = Form(None),
+    request: Request = None,
 ):
     """
     チャットメッセージを処理する
@@ -26,6 +28,7 @@ async def process_message(
         message: ユーザーメッセージ
         files: 添付ファイルリスト（オプション）
         session_id: セッションID（オプション）
+        request: リクエスト情報
 
     Returns:
         ChatResponse: 処理結果
@@ -33,6 +36,18 @@ async def process_message(
     global agent_manager
 
     try:
+        # リクエスト情報をログに記録
+        client_ip = request.client.host if request and request.client else "unknown"
+        user_agent = request.headers.get("user-agent", "unknown")
+        logger.info(
+            f"メッセージ処理開始 - IP: {client_ip}, セッションID: {session_id}, UA: {user_agent}"
+        )
+        logger.debug(
+            f"受信メッセージ: {message[:100]}..."
+            if len(message) > 100
+            else f"受信メッセージ: {message}"
+        )
+
         # AgentManagerの初期化（初回実行時）
         if agent_manager is None:
             llm_config = await get_llm_config()
@@ -49,6 +64,16 @@ async def process_message(
 
         # メッセージ処理
         response = await agent_manager.process_message(message, session_id, file_paths)
+
+        # 結果をログに記録
+        logger.info(f"メッセージ処理完了 - セッションID: {response['session_id']}")
+        logger.debug(f"思考プロセス: {response.get('thought_process', '')[:200]}...")
+
+        # ツール呼び出しがある場合はログに記録
+        if response.get("tool_calls"):
+            logger.debug(
+                f"ツール呼び出し: {json.dumps(response.get('tool_calls', [])[:3], ensure_ascii=False)}"
+            )
 
         return ChatResponse(
             message=response["message"],

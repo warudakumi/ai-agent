@@ -58,9 +58,25 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
+
+    # 接続元IPアドレスの取得
+    client_host = request.client.host if request.client else "unknown"
+    client_query = str(request.query_params) if request.query_params else ""
+
+    # リクエストログ
+    logger.info(
+        f"リクエスト受信: {request.method} {request.url.path} - 接続元IP: {client_host}, クエリ: {client_query}"
+    )
+
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
+
+    # レスポンスログ
+    logger.info(
+        f"レスポンス送信: {request.method} {request.url.path} - 処理時間: {process_time:.4f}秒, ステータス: {response.status_code}"
+    )
+
     return response
 
 
