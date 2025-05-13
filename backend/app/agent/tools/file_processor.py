@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -24,8 +25,16 @@ class FileProcessorTool(BaseAgentTool):
             処理結果
         """
         try:
-            # 入力をパース
-            inputs = json.loads(input_str) if isinstance(input_str, str) else input_str
+
+            def loads_with_windows_path(raw: str) -> dict:
+                fixed = re.sub(r'(?<!\\)\\(?![\\"])', r"\\\\", raw)
+                return json.loads(fixed)
+
+            inputs = (
+                loads_with_windows_path(input_str)
+                if isinstance(input_str, str)
+                else input_str
+            )
             file_path = str(Path(inputs.get("file_path")))
             operation = inputs.get("operation", "summarize")
 

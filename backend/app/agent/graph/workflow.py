@@ -79,6 +79,7 @@ def create_workflow(agent, tools):
             使用可能なツール:
             1. web_search - ウェブ上で情報を検索します
             2. file_processor - アップロードされたファイルを処理します
+            3. document_checker - アップロードされたドキュメントをチェックします
             
             問題解決の手順:
             1. 問題を明確に理解する

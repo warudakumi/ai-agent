@@ -1,6 +1,7 @@
 from typing import List
 
 from app.agent.tools.base import BaseAgentTool
+from app.agent.tools.document_checker import DocumentCheckerTool
 from app.agent.tools.file_processor import FileProcessorTool
 from app.agent.tools.web_search import WebSearchTool
 
@@ -10,5 +11,6 @@ def get_tools() -> List[BaseAgentTool]:
     return [
         WebSearchTool(),
         FileProcessorTool(),
+        DocumentCheckerTool(),
         # 新しいツールはここに追加
     ]
