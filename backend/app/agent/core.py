@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 from app.agent.graph.workflow import AgentState, create_workflow
 from app.agent.memory import AgentMemory
 from app.agent.tools import get_tools
+from app.core.error_handler import ErrorSanitizer
 from app.services.llm_service import get_llm
 from loguru import logger
 
@@ -160,8 +161,12 @@ class AgentManager:
 
         except Exception as e:
             logger.error(f"メッセージ処理エラー: {str(e)}")
+
+            # エラーメッセージをサニタイズ
+            safe_message = ErrorSanitizer.sanitize_error_message(str(e), "workflow")
+
             return {
-                "message": f"申し訳ありません、エラーが発生しました: {str(e)}",
+                "message": f"申し訳ありません、{safe_message}",
                 "session_id": session_id or str(uuid.uuid4()),
                 "thought_process": "",
                 "tool_calls": [],

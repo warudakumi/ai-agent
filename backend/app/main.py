@@ -83,10 +83,15 @@ async def add_process_time_header(request: Request, call_next):
 # エラーハンドラ
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    from app.core.error_handler import ErrorSanitizer
+
+    # 元のエラーをログに記録
     logger.error(f"グローバルエラーハンドラ: {str(exc)}")
-    return JSONResponse(
-        status_code=500, content={"detail": f"内部サーバーエラー: {str(exc)}"}
-    )
+
+    # エラーメッセージをサニタイズ
+    safe_message = ErrorSanitizer.sanitize_error_message(str(exc), "api_call")
+
+    return JSONResponse(status_code=500, content={"detail": safe_message})
 
 
 # ルートエンドポイント

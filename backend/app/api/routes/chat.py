@@ -4,6 +4,7 @@ import uuid
 from typing import List, Optional
 
 from app.api.dependencies import get_llm_config
+from app.core.error_handler import ErrorSanitizer
 from app.core.session_manager import get_session_manager
 from app.models.chat import ChatResponse, FileUploadResponse
 from app.services.file_service import save_uploaded_file
@@ -96,9 +97,11 @@ async def process_message(
 
     except Exception as e:
         logger.error(f"メッセージ処理エラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"メッセージ処理中にエラーが発生しました: {str(e)}",
+            detail=safe_message,
         )
 
 
@@ -149,9 +152,11 @@ async def update_session_llm_config(
         )
     except Exception as e:
         logger.error(f"LLM設定更新エラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"LLM設定の更新中にエラーが発生しました: {str(e)}",
+            detail=safe_message,
         )
 
 
@@ -164,9 +169,11 @@ async def get_session_stats():
         return stats
     except Exception as e:
         logger.error(f"セッション統計取得エラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"セッション統計の取得中にエラーが発生しました: {str(e)}",
+            detail=safe_message,
         )
 
 
@@ -189,9 +196,11 @@ async def delete_session(session_id: str):
             }
     except Exception as e:
         logger.error(f"セッション削除エラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"セッション削除中にエラーが発生しました: {str(e)}",
+            detail=safe_message,
         )
 
 
@@ -209,9 +218,11 @@ async def cleanup_old_sessions(max_age_seconds: int = 3600):
         }
     except Exception as e:
         logger.error(f"セッションクリーンアップエラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"セッションクリーンアップ中にエラーが発生しました: {str(e)}",
+            detail=safe_message,
         )
 
 
@@ -242,7 +253,9 @@ async def upload_file(file: UploadFile = File(...)):
 
     except Exception as e:
         logger.error(f"ファイルアップロードエラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
         return FileUploadResponse(
             success=False,
-            error=f"ファイルアップロード中にエラーが発生しました: {str(e)}",
+            error=safe_message,
         )

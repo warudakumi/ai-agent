@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 from app.agent.tools.base import BaseAgentTool
+from app.core.error_handler import ErrorSanitizer
 from loguru import logger
 
 
@@ -58,7 +59,10 @@ class FileProcessorTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"ファイル処理エラー: {str(e)}")
-            return f"ファイル処理中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
 
     def _process_csv(self, file_path: str, operation: str) -> str:
         """CSVファイルを処理"""
@@ -94,7 +98,10 @@ class FileProcessorTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"CSV処理エラー: {str(e)}")
-            return f"CSVファイル処理中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
 
     def _process_text(self, file_path: str, operation: str) -> str:
         """テキストファイルを処理"""
@@ -132,7 +139,10 @@ class FileProcessorTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"テキスト処理エラー: {str(e)}")
-            return f"テキストファイル処理中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
 
     def _process_excel(self, file_path: str, operation: str) -> str:
         """Excelファイルを処理"""
@@ -172,7 +182,10 @@ class FileProcessorTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"Excel処理エラー: {str(e)}")
-            return f"Excelファイル処理中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
 
     def _process_json(self, file_path: str, operation: str) -> str:
         """JSONファイルを処理"""
@@ -251,4 +264,7 @@ class FileProcessorTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"JSON処理エラー: {str(e)}")
-            return f"JSONファイル処理中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message

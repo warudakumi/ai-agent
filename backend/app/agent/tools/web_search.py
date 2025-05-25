@@ -1,4 +1,5 @@
 from app.agent.tools.base import BaseAgentTool
+from app.core.error_handler import ErrorSanitizer
 from loguru import logger
 
 
@@ -53,4 +54,7 @@ class WebSearchTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"Web検索エラー: {str(e)}")
-            return f"検索中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "tool_execution"
+            )
+            return safe_message

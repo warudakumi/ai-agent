@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 from app.agent.tools.base import BaseAgentTool
+from app.core.error_handler import ErrorSanitizer
 from loguru import logger
 
 
@@ -82,7 +83,10 @@ class DocumentCheckerTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"ドキュメントチェックエラー: {str(e)}")
-            return f"ドキュメントチェック中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
 
     def _check_document(self, file_path: str, operation: str) -> str:
         """エクセルドキュメントをチェック"""
@@ -126,4 +130,7 @@ class DocumentCheckerTool(BaseAgentTool):
 
         except Exception as e:
             logger.error(f"ドキュメントチェックエラー: {str(e)}")
-            return f"ドキュメントチェック中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message

@@ -1,6 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional, TypedDict
 
+from app.core.error_handler import ErrorSanitizer
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 from loguru import logger
@@ -55,7 +56,8 @@ def create_workflow(agent, tools):
 
         except Exception as e:
             logger.error(f"入力処理エラー: {str(e)}")
-            state["error"] = f"入力処理中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(str(e), "workflow")
+            state["error"] = safe_message
             return state
 
     # ステップ2: 思考生成
@@ -125,7 +127,8 @@ def create_workflow(agent, tools):
 
         except Exception as e:
             logger.error(f"思考生成エラー: {str(e)}")
-            state["error"] = f"思考生成中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(str(e), "llm_call")
+            state["error"] = safe_message
             return state
 
     # ステップ3: ツール選択と実行
@@ -249,11 +252,14 @@ def create_workflow(agent, tools):
 
                         except Exception as e:
                             logger.error(f"ツール実行エラー: {str(e)}")
+                            safe_message = ErrorSanitizer.sanitize_error_message(
+                                str(e), "tool_execution"
+                            )
                             tools_output.append(
                                 {
                                     "tool": tool_name,
                                     "input": tool_input,
-                                    "output": f"エラー: {str(e)}",
+                                    "output": safe_message,
                                 }
                             )
 
@@ -263,7 +269,10 @@ def create_workflow(agent, tools):
 
         except Exception as e:
             logger.error(f"ツール実行エラー: {str(e)}")
-            state["error"] = f"ツール実行中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "tool_execution"
+            )
+            state["error"] = safe_message
             return state
 
     # ステップ4: 最終応答生成
@@ -325,7 +334,8 @@ def create_workflow(agent, tools):
 
         except Exception as e:
             logger.error(f"応答生成エラー: {str(e)}")
-            state["error"] = f"応答生成中にエラーが発生しました: {str(e)}"
+            safe_message = ErrorSanitizer.sanitize_error_message(str(e), "llm_call")
+            state["error"] = safe_message
             return state
 
     # ノードの追加
