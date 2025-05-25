@@ -115,3 +115,124 @@
     transform: translateY(0);
   }
 }
+
+/* マークダウン要素のスタイリング */
+.messageText h1,
+.messageText h2,
+.messageText h3,
+.messageText h4,
+.messageText h5,
+.messageText h6 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.messageText h1 { font-size: 1.5rem; }
+.messageText h2 { font-size: 1.3rem; }
+.messageText h3 { font-size: 1.1rem; }
+.messageText h4 { font-size: 1rem; }
+
+.messageText ul,
+.messageText ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.messageText li {
+  margin: 0.25rem 0;
+}
+
+.messageText strong {
+  font-weight: 600;
+}
+
+.messageText em {
+  font-style: italic;
+}
+
+/* コードブロックのスタイリング */
+.codeBlock {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.codeBlock code {
+  background: none;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+}
+
+.inlineCode {
+  background-color: #f1f3f4;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #d73a49;
+}
+
+/* リンクのスタイリング */
+.link {
+  color: #0066cc;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s;
+}
+
+.link:hover {
+  border-bottom-color: #0066cc;
+}
+
+/* テーブルのスタイリング */
+.tableWrapper {
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  border: 1px solid #dee2e6;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.table tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* 引用のスタイリング */
+.blockquote {
+  border-left: 4px solid #0066cc;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0 0.5rem 1rem;
+  background-color: #f8f9fa;
+  font-style: italic;
+  color: #666;
+}
+
+/* 水平線のスタイリング */
+.messageText hr {
+  border: none;
+  border-top: 1px solid #dee2e6;
+  margin: 1rem 0;
+}

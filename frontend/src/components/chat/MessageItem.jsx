@@ -1,4 +1,7 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 import styles from './MessageItem.module.css';
 
 const MessageItem = ({ message }) => {
@@ -10,14 +13,65 @@ const MessageItem = ({ message }) => {
     minute: '2-digit',
   }).format(new Date(timestamp));
 
-  // AIメッセージをドキュメント形式で表示する処理
+  // マークダウンコンポーネントのカスタマイズ
+  const markdownComponents = {
+    // コードブロックのスタイリング
+    code: ({ node, inline, className, children, ...props }) => {
+      const match = /language-(\w+)/.exec(className || '');
+      return !inline && match ? (
+        <pre className={styles.codeBlock}>
+          <code className={className} {...props}>
+            {children}
+          </code>
+        </pre>
+      ) : (
+        <code className={styles.inlineCode} {...props}>
+          {children}
+        </code>
+      );
+    },
+    // リンクのスタイリング
+    a: ({ href, children }) => (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={styles.link}>
+        {children}
+      </a>
+    ),
+    // テーブルのスタイリング
+    table: ({ children }) => (
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>{children}</table>
+      </div>
+    ),
+    // 引用のスタイリング
+    blockquote: ({ children }) => (
+      <blockquote className={styles.blockquote}>{children}</blockquote>
+    ),
+  };
+
+  // メッセージ内容をレンダリング
   const renderContent = () => {
     if (sender === 'ai') {
-      return formatDocumentStyle(content);
-    } else {
       return (
         <div className={styles.messageText}>
-          {formatMessage(content)}
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeHighlight]}
+            components={markdownComponents}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      );
+    } else {
+      // ユーザーメッセージは簡単なマークダウンのみ対応
+      return (
+        <div className={styles.messageText}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
       );
     }
@@ -52,34 +106,6 @@ const formatFileSize = (bytes) => {
   if (bytes < 1024) return bytes + ' B';
   else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
-
-// 通常のメッセージをフォーマット（改行やコードブロックなど）
-const formatMessage = (text) => {
-  if (!text) return '';
-
-  // 行ごとに処理
-  const lines = text.split('\n');
-  
-  return lines.map((line, i) => (
-    <p key={i}>{line || '\u00A0'}</p>
-  ));
-};
-
-// AIメッセージをドキュメントスタイルでフォーマット
-const formatDocumentStyle = (text) => {
-  if (!text) return '';
-
-  // 行ごとに処理
-  const lines = text.split('\n');
-  
-  return (
-    <div className={styles.messageText}>
-      {lines.map((line, i) => (
-        <p key={i}>{line || '\u00A0'}</p>
-      ))}
-    </div>
-  );
 };
 
 export default MessageItem;
