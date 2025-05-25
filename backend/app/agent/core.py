@@ -10,20 +10,24 @@ from loguru import logger
 
 
 class AgentManager:
-    """エージェントマネージャクラス"""
+    """エージェントマネージャクラス - セッション別管理対応"""
 
     def __init__(self, llm_config: Dict[str, Any]):
         """
         AgentManagerの初期化
 
         Args:
-            llm_config: LLM設定
+            llm_config: デフォルトLLM設定
         """
-        self.llm = get_llm(llm_config)
+        self.default_llm_config = llm_config
+        self.default_llm = get_llm(llm_config)
         self.memory = AgentMemory()
         self.tools = get_tools()
-        self.workflow = create_workflow(self.llm, self.tools)
+        self.default_workflow = create_workflow(self.default_llm, self.tools)
         self.sessions = {}  # セッション情報
+        self.session_llm_configs = {}  # セッション別LLM設定
+        self.session_llms = {}  # セッション別LLMインスタンス
+        self.session_workflows = {}  # セッション別ワークフロー
 
     def get_or_create_session(self, session_id: Optional[str] = None) -> str:
         """
@@ -37,16 +41,53 @@ class AgentManager:
         """
         if not session_id or session_id not in self.sessions:
             new_session_id = session_id or str(uuid.uuid4())
+            current_time = asyncio.get_event_loop().time()
             self.sessions[new_session_id] = {
-                "created_at": asyncio.get_event_loop().time(),
-                "last_used": asyncio.get_event_loop().time(),
+                "created_at": current_time,
+                "last_used": current_time,
                 "message_count": 0,
             }
+            # セッション別のLLM設定をデフォルトで初期化
+            self.session_llm_configs[new_session_id] = self.default_llm_config.copy()
+            logger.info(f"新しいセッションを作成: {new_session_id}")
             return new_session_id
 
         # 既存セッションの最終使用時間を更新
         self.sessions[session_id]["last_used"] = asyncio.get_event_loop().time()
         return session_id
+
+    def get_session_llm_config(self, session_id: str) -> Dict[str, Any]:
+        """セッション別のLLM設定を取得"""
+        return self.session_llm_configs.get(session_id, self.default_llm_config)
+
+    def update_session_llm_config(
+        self, session_id: str, llm_config: Dict[str, Any]
+    ) -> None:
+        """セッション別のLLM設定を更新"""
+        if session_id not in self.sessions:
+            self.get_or_create_session(session_id)
+
+        self.session_llm_configs[session_id] = llm_config.copy()
+
+        # セッション別のLLMインスタンスとワークフローを再作成
+        try:
+            self.session_llms[session_id] = get_llm(llm_config)
+            self.session_workflows[session_id] = create_workflow(
+                self.session_llms[session_id], self.tools
+            )
+            logger.info(f"セッション {session_id} のLLM設定を更新しました")
+        except Exception as e:
+            logger.error(f"セッション {session_id} のLLM設定更新エラー: {str(e)}")
+            # エラー時はデフォルト設定を使用
+            self.session_llm_configs[session_id] = self.default_llm_config.copy()
+
+    def get_session_workflow(self, session_id: str):
+        """セッション別のワークフローを取得"""
+        if session_id in self.session_workflows:
+            return self.session_workflows[session_id]
+
+        # セッション別ワークフローが存在しない場合はデフォルトを使用
+        return self.default_workflow
 
     async def process_message(
         self,
@@ -92,9 +133,10 @@ class AgentManager:
                 "error": None,
             }
 
-            # ワークフローを実行
+            # セッション別のワークフローを取得して実行
+            workflow = self.get_session_workflow(session_id)
             logger.info(f"ワークフロー実行開始: セッションID={session_id}")
-            result_state = await asyncio.to_thread(self.workflow.invoke, initial_state)
+            result_state = await asyncio.to_thread(workflow.invoke, initial_state)
 
             # エラー処理
             if result_state.get("error"):
@@ -145,6 +187,22 @@ class AgentManager:
         # 古いセッションを削除
         for session_id in sessions_to_remove:
             self.memory.clear_session(session_id)
+            if session_id in self.session_llm_configs:
+                del self.session_llm_configs[session_id]
+            if session_id in self.session_llms:
+                del self.session_llms[session_id]
+            if session_id in self.session_workflows:
+                del self.session_workflows[session_id]
             del self.sessions[session_id]
+            logger.info(f"古いセッションを削除: {session_id}")
 
         return len(sessions_to_remove)
+
+    def get_session_stats(self) -> Dict[str, Any]:
+        """セッション統計情報を取得"""
+        return {
+            "total_sessions": len(self.sessions),
+            "memory_sessions": self.memory.get_session_count(),
+            "llm_config_sessions": len(self.session_llm_configs),
+            "active_workflows": len(self.session_workflows),
+        }

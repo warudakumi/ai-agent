@@ -1,17 +1,16 @@
 import json
+import random
+import uuid
 from typing import List, Optional
 
-from app.agent.core import AgentManager
 from app.api.dependencies import get_llm_config
+from app.core.session_manager import get_session_manager
 from app.models.chat import ChatResponse, FileUploadResponse
 from app.services.file_service import save_uploaded_file
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
 from loguru import logger
 
 router = APIRouter()
-
-# AgentManagerインスタンスを保持
-agent_manager: Optional[AgentManager] = None
 
 
 @router.post("/message", response_model=ChatResponse)
@@ -33,8 +32,6 @@ async def process_message(
     Returns:
         ChatResponse: 処理結果
     """
-    global agent_manager
-
     try:
         # リクエスト情報をログに記録
         client_ip = request.client.host if request and request.client else "unknown"
@@ -48,11 +45,18 @@ async def process_message(
             else f"受信メッセージ: {message}"
         )
 
-        # AgentManagerの初期化（初回実行時）
-        if agent_manager is None:
-            llm_config = await get_llm_config()
-            agent_manager = AgentManager(llm_config)
-            logger.info("AgentManagerを初期化しました")
+        # LLM設定を取得
+        llm_config = await get_llm_config()
+
+        # セッションIDが提供されていない場合は一時的なIDを生成
+        if not session_id:
+            session_id = str(uuid.uuid4())
+
+        # セッション管理システムを使用してAgentManagerを取得
+        session_manager = get_session_manager()
+        agent_manager = session_manager.get_or_create_agent_manager(
+            session_id, llm_config
+        )
 
         # ファイル処理
         file_paths = []
@@ -75,6 +79,14 @@ async def process_message(
                 f"ツール呼び出し: {json.dumps(response.get('tool_calls', [])[:3], ensure_ascii=False)}"
             )
 
+        # 定期的なクリーンアップ（10%の確率で実行）
+        if random.random() < 0.1:
+            removed_count = session_manager.cleanup_old_sessions()
+            if removed_count > 0:
+                logger.info(
+                    f"{removed_count}個の古いセッションをクリーンアップしました"
+                )
+
         return ChatResponse(
             message=response["message"],
             session_id=response["session_id"],
@@ -87,6 +99,119 @@ async def process_message(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"メッセージ処理中にエラーが発生しました: {str(e)}",
+        )
+
+
+@router.post("/update-llm-config")
+async def update_session_llm_config(
+    session_id: str = Form(...),
+    llm_config: str = Form(...),  # JSON文字列として受信
+):
+    """
+    セッション別のLLM設定を更新する
+
+    Args:
+        session_id: セッションID
+        llm_config: LLM設定（JSON文字列）
+
+    Returns:
+        更新結果
+    """
+    try:
+        # JSON文字列をパース
+        config_dict = json.loads(llm_config)
+
+        # セッション管理システムを使用
+        session_manager = get_session_manager()
+
+        # セッション別のLLM設定を更新
+        success = session_manager.update_session_llm_config(session_id, config_dict)
+
+        if success:
+            logger.info(f"セッション {session_id} のLLM設定を更新しました")
+            return {"success": True, "message": "LLM設定を更新しました"}
+        else:
+            # セッションが存在しない場合は新しいAgentManagerを作成
+            agent_manager = session_manager.get_or_create_agent_manager(
+                session_id, config_dict
+            )
+            logger.info(f"新しいセッション {session_id} でLLM設定を設定しました")
+            return {
+                "success": True,
+                "message": "新しいセッションでLLM設定を設定しました",
+            }
+
+    except json.JSONDecodeError as e:
+        logger.error(f"LLM設定のJSONパースエラー: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"LLM設定のJSON形式が正しくありません: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"LLM設定更新エラー: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"LLM設定の更新中にエラーが発生しました: {str(e)}",
+        )
+
+
+@router.get("/session-stats")
+async def get_session_stats():
+    """セッション統計情報を取得"""
+    try:
+        session_manager = get_session_manager()
+        stats = session_manager.get_session_stats()
+        return stats
+    except Exception as e:
+        logger.error(f"セッション統計取得エラー: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"セッション統計の取得中にエラーが発生しました: {str(e)}",
+        )
+
+
+@router.delete("/session/{session_id}")
+async def delete_session(session_id: str):
+    """特定のセッションを削除"""
+    try:
+        session_manager = get_session_manager()
+        removed = session_manager.remove_session(session_id)
+
+        if removed:
+            return {
+                "success": True,
+                "message": f"セッション {session_id} を削除しました",
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"セッション {session_id} が見つかりません",
+            }
+    except Exception as e:
+        logger.error(f"セッション削除エラー: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"セッション削除中にエラーが発生しました: {str(e)}",
+        )
+
+
+@router.post("/cleanup-sessions")
+async def cleanup_old_sessions(max_age_seconds: int = 3600):
+    """古いセッションを手動でクリーンアップ"""
+    try:
+        session_manager = get_session_manager()
+        removed_count = session_manager.cleanup_old_sessions(max_age_seconds)
+
+        return {
+            "success": True,
+            "message": f"{removed_count}個の古いセッションをクリーンアップしました",
+            "removed_count": removed_count,
+        }
+    except Exception as e:
+        logger.error(f"セッションクリーンアップエラー: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"セッションクリーンアップ中にエラーが発生しました: {str(e)}",
         )
 
 
