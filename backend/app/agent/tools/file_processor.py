@@ -4,26 +4,29 @@ import re
 from pathlib import Path
 
 import pandas as pd
+import pdfplumber
 from app.agent.tools.base import BaseAgentTool
 from app.core.error_handler import ErrorSanitizer
+from docx import Document
 from loguru import logger
+from pptx import Presentation
 
 
 class FileProcessorTool(BaseAgentTool):
-    """ファイル処理ツール"""
+    """ファイル処理ツール - 全文読み取り対応"""
 
     name: str = "file_processor"
-    description: str = 'アップロードされたファイルを処理します。ファイルパスと処理タイプを指定してください。例: {"file_path": "/path/to/file.csv", "operation": "summarize"}'
+    description: str = 'アップロードされたファイルの内容を全文読み取りします。ファイルパスを指定してください。例: {"file_path": "/path/to/file.pdf"}'
 
     def _run(self, input_str: str) -> str:
         """
         ファイル処理を実行する
 
         Args:
-            input_str: JSON形式の入力。ファイルパスと操作を含む
+            input_str: JSON形式の入力。ファイルパスを含む
 
         Returns:
-            処理結果
+            ファイルの全文内容
         """
         try:
 
@@ -37,7 +40,6 @@ class FileProcessorTool(BaseAgentTool):
                 else input_str
             )
             file_path = str(Path(inputs.get("file_path")))
-            operation = inputs.get("operation", "summarize")
 
             if not file_path or not os.path.exists(file_path):
                 return "エラー: 有効なファイルパスを指定してください"
@@ -46,14 +48,22 @@ class FileProcessorTool(BaseAgentTool):
             file_ext = os.path.splitext(file_path)[1].lower()
 
             # ファイルタイプに応じた処理
-            if file_ext == ".csv":
-                return self._process_csv(file_path, operation)
+            if file_ext == ".pdf":
+                return self._process_pdf(file_path)
+            elif file_ext == ".docx":
+                return self._process_docx(file_path)
+            elif file_ext == ".pptx":
+                return self._process_pptx(file_path)
+            elif file_ext == ".md":
+                return self._process_markdown(file_path)
+            elif file_ext == ".csv":
+                return self._process_csv(file_path)
             elif file_ext == ".txt":
-                return self._process_text(file_path, operation)
+                return self._process_text(file_path)
             elif file_ext in [".xlsx", ".xls"]:
-                return self._process_excel(file_path, operation)
+                return self._process_excel(file_path)
             elif file_ext == ".json":
-                return self._process_json(file_path, operation)
+                return self._process_json(file_path)
             else:
                 return f"未対応のファイル形式です: {file_ext}"
 
@@ -64,37 +74,159 @@ class FileProcessorTool(BaseAgentTool):
             )
             return safe_message
 
-    def _process_csv(self, file_path: str, operation: str) -> str:
+    def _process_pdf(self, file_path: str) -> str:
+        """PDFファイルを処理"""
+        try:
+            content = "=== PDFファイル内容 ===\n\n"
+
+            with pdfplumber.open(file_path) as pdf:
+                for page_num, page in enumerate(pdf.pages, 1):
+                    text = page.extract_text()
+                    if text and text.strip():
+                        content += f"--- ページ {page_num} ---\n"
+                        content += text.strip() + "\n\n"
+
+                    # テーブルがある場合は抽出
+                    tables = page.extract_tables()
+                    for table_num, table in enumerate(tables, 1):
+                        if table:
+                            content += f"[ページ {page_num} - テーブル {table_num}]\n"
+                            for row in table:
+                                if row:
+                                    content += (
+                                        " | ".join([cell or "" for cell in row]) + "\n"
+                                    )
+                            content += "\n"
+
+            return (
+                content
+                if content.strip() != "=== PDFファイル内容 ==="
+                else "PDFからテキストを抽出できませんでした"
+            )
+
+        except Exception as e:
+            logger.error(f"PDF処理エラー: {str(e)}")
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
+
+    def _process_docx(self, file_path: str) -> str:
+        """Wordファイルを処理"""
+        try:
+            doc = Document(file_path)
+            content = "=== Wordファイル内容 ===\n\n"
+
+            for paragraph in doc.paragraphs:
+                if paragraph.text.strip():
+                    # 見出しレベルの判定
+                    if paragraph.style.name.startswith("Heading"):
+                        level = paragraph.style.name.replace("Heading ", "")
+                        if level.isdigit():
+                            content += "#" * int(level) + " " + paragraph.text + "\n\n"
+                        else:
+                            content += "# " + paragraph.text + "\n\n"
+                    else:
+                        content += paragraph.text + "\n\n"
+
+            # テーブルの処理
+            for table_num, table in enumerate(doc.tables, 1):
+                content += f"[テーブル {table_num}]\n"
+                for row in table.rows:
+                    row_text = " | ".join([cell.text.strip() for cell in row.cells])
+                    if row_text.strip():
+                        content += row_text + "\n"
+                content += "\n"
+
+            return (
+                content
+                if content.strip() != "=== Wordファイル内容 ==="
+                else "Wordファイルからテキストを抽出できませんでした"
+            )
+
+        except Exception as e:
+            logger.error(f"Word処理エラー: {str(e)}")
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
+
+    def _process_pptx(self, file_path: str) -> str:
+        """PowerPointファイルを処理"""
+        try:
+            prs = Presentation(file_path)
+            content = "=== PowerPointファイル内容 ===\n\n"
+
+            for slide_num, slide in enumerate(prs.slides, 1):
+                content += f"--- スライド {slide_num} ---\n"
+
+                for shape in slide.shapes:
+                    if hasattr(shape, "text") and shape.text.strip():
+                        # タイトルかどうかの判定
+                        if shape == slide.shapes.title:
+                            content += f"# {shape.text}\n\n"
+                        else:
+                            content += f"{shape.text}\n\n"
+
+                    # テーブルの処理
+                    if shape.has_table:
+                        content += "[テーブル]\n"
+                        table = shape.table
+                        for row in table.rows:
+                            row_text = " | ".join(
+                                [cell.text.strip() for cell in row.cells]
+                            )
+                            if row_text.strip():
+                                content += row_text + "\n"
+                        content += "\n"
+
+                content += "\n"
+
+            return (
+                content
+                if content.strip() != "=== PowerPointファイル内容 ==="
+                else "PowerPointファイルからテキストを抽出できませんでした"
+            )
+
+        except Exception as e:
+            logger.error(f"PowerPoint処理エラー: {str(e)}")
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
+
+    def _process_markdown(self, file_path: str) -> str:
+        """Markdownファイルを処理"""
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Markdownの構造をそのまま保持
+            result = "=== Markdownファイル内容 ===\n\n"
+            result += content
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Markdown処理エラー: {str(e)}")
+            safe_message = ErrorSanitizer.sanitize_error_message(
+                str(e), "file_processing"
+            )
+            return safe_message
+
+    def _process_csv(self, file_path: str) -> str:
         """CSVファイルを処理"""
         try:
             df = pd.read_csv(file_path)
 
-            if operation == "summarize":
-                # データの概要を生成
-                summary = "CSVファイル概要:\n"
-                summary += f"- レコード数: {len(df)}\n"
-                summary += f"- カラム数: {len(df.columns)}\n"
-                summary += f"- カラム名: {', '.join(df.columns)}\n\n"
+            content = "=== CSVファイル内容 ===\n\n"
+            content += f"レコード数: {len(df)}\n"
+            content += f"カラム数: {len(df.columns)}\n\n"
 
-                # サンプルデータの表示（先頭5行）
-                summary += "サンプルデータ（先頭5行）:\n"
-                summary += df.head(5).to_string() + "\n\n"
+            # 全データを表形式で出力
+            content += df.to_string(index=False)
 
-                # データタイプの情報
-                summary += "データタイプ情報:\n"
-                dtypes = df.dtypes.astype(str).to_dict()
-                for col, dtype in dtypes.items():
-                    summary += f"- {col}: {dtype}\n"
-
-                return summary
-
-            elif operation == "columns":
-                # カラム情報のみを返す
-                columns = ", ".join(df.columns)
-                return f"CSVのカラム一覧: {columns}"
-
-            else:
-                return f"未対応の操作です: {operation}"
+            return content
 
         except Exception as e:
             logger.error(f"CSV処理エラー: {str(e)}")
@@ -103,39 +235,16 @@ class FileProcessorTool(BaseAgentTool):
             )
             return safe_message
 
-    def _process_text(self, file_path: str, operation: str) -> str:
+    def _process_text(self, file_path: str) -> str:
         """テキストファイルを処理"""
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            if operation == "summarize":
-                # 簡単な要約を生成
-                lines = content.split("\n")
-                line_count = len(lines)
-                word_count = len(content.split())
-                char_count = len(content)
+            result = "=== テキストファイル内容 ===\n\n"
+            result += content
 
-                summary = "テキストファイル概要:\n"
-                summary += f"- 行数: {line_count}\n"
-                summary += f"- 単語数: {word_count}\n"
-                summary += f"- 文字数: {char_count}\n\n"
-
-                # 最初の5行を表示
-                summary += "ファイル先頭（最大5行）:\n"
-                preview_lines = lines[:5]
-                summary += "\n".join(preview_lines)
-
-                return summary
-
-            elif operation == "content":
-                # ファイル内容全体を返す
-                if len(content) > 2000:
-                    return content[:2000] + "...(以下省略)"
-                return content
-
-            else:
-                return f"未対応の操作です: {operation}"
+            return result
 
         except Exception as e:
             logger.error(f"テキスト処理エラー: {str(e)}")
@@ -144,41 +253,23 @@ class FileProcessorTool(BaseAgentTool):
             )
             return safe_message
 
-    def _process_excel(self, file_path: str, operation: str) -> str:
+    def _process_excel(self, file_path: str) -> str:
         """Excelファイルを処理"""
         try:
             excel = pd.ExcelFile(file_path)
-            sheet_names = excel.sheet_names
+            content = "=== Excelファイル内容 ===\n\n"
 
-            if operation == "summarize":
-                summary = "Excelファイル概要:\n"
-                summary += f"- シート数: {len(sheet_names)}\n"
-                summary += f"- シート名: {', '.join(sheet_names)}\n\n"
+            for sheet_name in excel.sheet_names:
+                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                content += f"--- シート: {sheet_name} ---\n"
+                content += f"レコード数: {len(df)}\n"
+                content += f"カラム数: {len(df.columns)}\n\n"
 
-                # 各シートの最初の数行を表示
-                for sheet in sheet_names[:3]:  # 最初の3シートのみ
-                    df = pd.read_excel(file_path, sheet_name=sheet)
-                    summary += f"シート「{sheet}」の概要:\n"
-                    summary += f"- レコード数: {len(df)}\n"
-                    summary += f"- カラム数: {len(df.columns)}\n"
-                    summary += f"- カラム名: {', '.join(df.columns)}\n\n"
+                # 全データを表形式で出力
+                content += df.to_string(index=False)
+                content += "\n\n"
 
-                    # サンプルデータ（先頭3行）
-                    summary += f"シート「{sheet}」のサンプルデータ（先頭3行）:\n"
-                    summary += df.head(3).to_string() + "\n\n"
-
-                if len(sheet_names) > 3:
-                    summary += f"（他 {len(sheet_names) - 3} シートは省略）\n"
-
-                return summary
-
-            elif operation == "sheets":
-                # シート名のリストを返す
-                sheets = ", ".join(sheet_names)
-                return f"Excelのシート一覧: {sheets}"
-
-            else:
-                return f"未対応の操作です: {operation}"
+            return content
 
         except Exception as e:
             logger.error(f"Excel処理エラー: {str(e)}")
@@ -187,80 +278,16 @@ class FileProcessorTool(BaseAgentTool):
             )
             return safe_message
 
-    def _process_json(self, file_path: str, operation: str) -> str:
+    def _process_json(self, file_path: str) -> str:
         """JSONファイルを処理"""
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            if operation == "summarize":
-                # データの概要を生成
-                if isinstance(data, list):
-                    summary = "JSONファイル概要（配列）:\n"
-                    summary += f"- 要素数: {len(data)}\n\n"
+            content = "=== JSONファイル内容 ===\n\n"
+            content += json.dumps(data, indent=2, ensure_ascii=False)
 
-                    # サンプルデータ（先頭の要素）
-                    if len(data) > 0:
-                        first_item = data[0]
-                        if isinstance(first_item, dict):
-                            summary += (
-                                "最初の要素のキー: "
-                                + ", ".join(first_item.keys())
-                                + "\n\n"
-                            )
-
-                            # サンプルとして最初の要素を表示
-                            summary += "最初の要素のサンプル:\n"
-                            summary += json.dumps(
-                                first_item, indent=2, ensure_ascii=False
-                            )[:500]
-                            if len(json.dumps(first_item)) > 500:
-                                summary += "...(以下省略)"
-                        else:
-                            summary += "最初の要素: " + str(first_item)[:100] + "\n"
-
-                elif isinstance(data, dict):
-                    summary = "JSONファイル概要（オブジェクト）:\n"
-                    summary += f"- キー数: {len(data.keys())}\n"
-                    summary += f"- キー一覧: {', '.join(list(data.keys())[:10])}"
-
-                    if len(data.keys()) > 10:
-                        summary += f" ... 他 {len(data.keys()) - 10} 個"
-
-                    summary += "\n\n"
-                    summary += "データサンプル（一部）:\n"
-                    summary += json.dumps(
-                        dict(list(data.items())[:5]), indent=2, ensure_ascii=False
-                    )
-                    if len(data.keys()) > 5:
-                        summary += "\n...(以下省略)"
-
-                else:
-                    summary = "JSONファイル概要:\n"
-                    summary += f"データ型: {type(data).__name__}\n"
-                    summary += f"内容: {str(data)[:200]}"
-                    if len(str(data)) > 200:
-                        summary += "...(以下省略)"
-
-                return summary
-
-            elif operation == "keys":
-                # キー情報を返す
-                if isinstance(data, dict):
-                    keys = ", ".join(data.keys())
-                    return f"JSONのキー一覧: {keys}"
-                elif (
-                    isinstance(data, list)
-                    and len(data) > 0
-                    and isinstance(data[0], dict)
-                ):
-                    keys = ", ".join(data[0].keys())
-                    return f"JSON配列の最初の要素のキー一覧: {keys}"
-                else:
-                    return "キー情報を取得できません（データ形式がオブジェクトではありません）"
-
-            else:
-                return f"未対応の操作です: {operation}"
+            return content
 
         except Exception as e:
             logger.error(f"JSON処理エラー: {str(e)}")
