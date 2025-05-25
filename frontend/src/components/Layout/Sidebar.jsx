@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Sidebar.module.css';
 
-const Sidebar = ({ isOpen = true, onToggle }) => {
+const Sidebar = ({ isOpen = true, onToggle, onClearChat }) => {
   const pathname = usePathname();
   
   // ナビゲーション項目
@@ -13,6 +13,12 @@ const Sidebar = ({ isOpen = true, onToggle }) => {
     { path: '/chat', label: 'チャット' },
     { path: '/settings', label: '設定' },
   ];
+
+  const handleClearChat = () => {
+    if (window.confirm('チャット履歴をクリアしますか？この操作は元に戻せません。')) {
+      onClearChat && onClearChat();
+    }
+  };
   
   return (
     <>
@@ -33,6 +39,16 @@ const Sidebar = ({ isOpen = true, onToggle }) => {
               {item.label}
             </Link>
           ))}
+          
+          {pathname === '/chat' && (
+            <button
+              onClick={handleClearChat}
+              className={styles.clearButton}
+              title="チャット履歴をクリア"
+            >
+              🗑️ 履歴をクリア
+            </button>
+          )}
         </nav>
         
         <div className={styles.footer}>

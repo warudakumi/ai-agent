@@ -51,6 +51,30 @@
   color: #212529;
 }
 
+.clearButton {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: #dc3545;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  border-radius: 0;
+}
+
+.clearButton:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.clearButton:active {
+  background-color: #f5c6cb;
+}
+
 .footer {
   padding: 20px;
   font-size: 0.8rem;

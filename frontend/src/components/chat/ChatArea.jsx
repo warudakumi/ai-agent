@@ -7,11 +7,24 @@ import apiService from '@/services/api';
 import styles from './ChatArea.module.css';
 
 // サイドバーの状態を親コンポーネントから受け取る
-const ChatArea = ({ isSidebarOpen }) => {
+const ChatArea = ({ isSidebarOpen, onClearMessages }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // 会話履歴をクリアする関数
+  const clearMessages = () => {
+    setMessages([]);
+    setSessionId(null);
+  };
+
+  // 親コンポーネントからクリア関数を呼び出せるようにする
+  useEffect(() => {
+    if (onClearMessages) {
+      onClearMessages(clearMessages);
+    }
+  }, [onClearMessages]);
 
   // メッセージ送信処理
   const handleSendMessage = async (text, files) => {
