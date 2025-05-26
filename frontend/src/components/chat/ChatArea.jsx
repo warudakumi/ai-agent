@@ -15,9 +15,20 @@ const ChatArea = ({ isSidebarOpen, onClearMessages }) => {
   const messagesEndRef = useRef(null);
 
   // 会話履歴をクリアする関数
-  const clearMessages = () => {
-    setMessages([]);
-    // セッションIDはクリアしない（設定を保持）
+  const clearMessages = async () => {
+    try {
+      // フロントエンドの表示をクリア
+      setMessages([]);
+      
+      // バックエンドの会話履歴もクリア（LLM設定は保持）
+      if (sessionId) {
+        await apiService.chat.clearHistory(sessionId);
+        console.log('会話履歴をクリアしました（LLM設定は保持）');
+      }
+    } catch (error) {
+      console.error('会話履歴クリアエラー:', error);
+      // エラーが発生してもフロントエンドの表示はクリアされている
+    }
   };
 
   // 親コンポーネントからクリア関数を呼び出せるようにする

@@ -58,6 +58,17 @@ const apiService = {
         throw error;
       }
     },
+
+    // 会話履歴をクリアする（LLM設定は保持）
+    clearHistory: async (sessionId) => {
+      try {
+        const response = await api.post(`/api/chat/clear-history/${sessionId}`);
+        return response.data;
+      } catch (error) {
+        console.error('会話履歴クリアエラー:', error);
+        throw error;
+      }
+    },
   },
   
   // 設定関連

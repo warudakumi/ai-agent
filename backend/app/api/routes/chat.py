@@ -225,6 +225,48 @@ async def delete_session(session_id: str):
         )
 
 
+@router.post("/clear-history/{session_id}")
+async def clear_chat_history(session_id: str):
+    """
+    セッションの会話履歴のみをクリア（LLM設定は保持）
+
+    Args:
+        session_id: セッションID
+
+    Returns:
+        クリア結果
+    """
+    try:
+        session_manager = get_session_manager()
+        agent_manager = session_manager.get_agent_manager(session_id)
+
+        if agent_manager:
+            # 会話履歴のみをクリア（LLM設定やセッション情報は保持）
+            agent_manager.memory.clear_session(session_id)
+            logger.info(f"セッション {session_id} の会話履歴をクリアしました")
+
+            return {
+                "success": True,
+                "message": f"セッション {session_id} の会話履歴をクリアしました",
+                "session_id": session_id,
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"セッション {session_id} が見つかりません",
+                "session_id": session_id,
+            }
+
+    except Exception as e:
+        logger.error(f"会話履歴クリアエラー: {str(e)}")
+        safe_message = ErrorSanitizer.sanitize_error_message(str(e), "api_call")
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=safe_message,
+        )
+
+
 @router.post("/cleanup-sessions")
 async def cleanup_old_sessions(max_age_seconds: int = 3600):
     """古いセッションを手動でクリーンアップ"""
