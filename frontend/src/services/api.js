@@ -31,27 +31,27 @@ const apiService = {
   // チャット関連
   chat: {
     // メッセージを送信する
-    sendMessage: async (message, files = [], sessionId = null) => {
-      const formData = new FormData();
-      formData.append('message', message);
-      
-      if (sessionId) {
-        formData.append('session_id', sessionId);
-      }
-      
-      // ファイルが存在する場合はフォームデータに追加
-      if (files && files.length > 0) {
-        files.forEach(file => {
-          formData.append('files', file);
-        });
-      }
-      
+    sendMessage: async (message, sessionId = null, files = null) => {
       try {
+        const formData = new FormData();
+        formData.append('message', message);
+        
+        if (sessionId) {
+          formData.append('session_id', sessionId);
+        }
+        
+        if (files && files.length > 0) {
+          files.forEach((file, index) => {
+            formData.append(`files`, file);
+          });
+        }
+        
         const response = await api.post('/api/chat/message', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
+        
         return response.data;
       } catch (error) {
         console.error('メッセージ送信エラー:', error);
@@ -62,7 +62,7 @@ const apiService = {
   
   // 設定関連
   settings: {
-    // LLM設定を保存する
+    // LLM設定を保存する（グローバル設定）
     saveLLMSettings: async (settings) => {
       try {
         const response = await api.post('/api/settings/llm', settings);
@@ -73,13 +73,43 @@ const apiService = {
       }
     },
     
-    // LLM設定を取得する
+    // LLM設定を取得する（グローバル設定）
     getLLMSettings: async () => {
       try {
         const response = await api.get('/api/settings/llm');
         return response.data;
       } catch (error) {
         console.error('LLM設定取得エラー:', error);
+        throw error;
+      }
+    },
+    
+    // セッション別LLM設定を保存する
+    saveSessionLLMSettings: async (sessionId, settings) => {
+      try {
+        const formData = new FormData();
+        formData.append('session_id', sessionId);
+        formData.append('settings_data', JSON.stringify(settings));
+        
+        const response = await api.post('/api/settings/llm/session', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      } catch (error) {
+        console.error('セッション別LLM設定保存エラー:', error);
+        throw error;
+      }
+    },
+    
+    // セッション別LLM設定を取得する
+    getSessionLLMSettings: async (sessionId) => {
+      try {
+        const response = await api.get(`/api/settings/llm/session/${sessionId}`);
+        return response.data;
+      } catch (error) {
+        console.error('セッション別LLM設定取得エラー:', error);
         throw error;
       }
     },

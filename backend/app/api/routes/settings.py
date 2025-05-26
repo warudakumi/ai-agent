@@ -91,18 +91,12 @@ async def save_session_llm_settings(
         # JSON文字列をパース
         config_dict = json.loads(settings_data)
 
+        logger.info(
+            f"セッション {session_id} のLLM設定保存要求: provider={config_dict.get('provider', 'unknown')}"
+        )
+
         # セッション管理システムを使用
         session_manager = get_session_manager()
-
-        # デフォルト設定を取得
-        from app.api.dependencies import get_llm_config
-
-        default_config = await get_llm_config()
-
-        # セッション別のAgentManagerを取得または作成
-        agent_manager = session_manager.get_or_create_agent_manager(
-            session_id, default_config
-        )
 
         # セッション別のLLM設定を更新
         success = session_manager.update_session_llm_config(session_id, config_dict)
@@ -115,10 +109,23 @@ async def save_session_llm_settings(
                 "data": config_dict,
             }
         else:
-            logger.warning(f"セッション {session_id} のLLM設定保存に失敗しました")
+            # セッションが存在しない場合は送信された設定でAgentManagerを作成
+            logger.info(
+                f"新しいセッション {session_id} を作成します: provider={config_dict.get('provider', 'unknown')}"
+            )
+            agent_manager = session_manager.get_or_create_agent_manager(
+                session_id,
+                config_dict,  # 送信された設定を使用
+            )
+
+            # 再度設定を更新（AgentManager作成後に確実に設定を適用）
+            session_manager.update_session_llm_config(session_id, config_dict)
+
+            logger.info(f"新しいセッション {session_id} でLLM設定を設定しました")
             return {
-                "success": False,
-                "message": f"セッション {session_id} のLLM設定保存に失敗しました",
+                "success": True,
+                "message": f"新しいセッション {session_id} でLLM設定を設定しました",
+                "data": config_dict,
             }
 
     except json.JSONDecodeError as e:

@@ -4,19 +4,20 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import MessageItem from './MessageItem';
 import InputArea from './InputArea';
 import apiService from '@/services/api';
+import { useSettings } from '@/context/SettingsContext';
 import styles from './ChatArea.module.css';
 
 // サイドバーの状態を親コンポーネントから受け取る
 const ChatArea = ({ isSidebarOpen, onClearMessages }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(null);
+  const { sessionId } = useSettings(); // SettingsContextからセッションIDを取得
   const messagesEndRef = useRef(null);
 
   // 会話履歴をクリアする関数
   const clearMessages = () => {
     setMessages([]);
-    setSessionId(null);
+    // セッションIDはクリアしない（設定を保持）
   };
 
   // 親コンポーネントからクリア関数を呼び出せるようにする
@@ -43,13 +44,8 @@ const ChatArea = ({ isSidebarOpen, onClearMessages }) => {
       setMessages(prev => [...prev, userMessage]);
       setIsLoading(true);
       
-      // APIにメッセージを送信
-      const response = await apiService.chat.sendMessage(text, files, sessionId);
-      
-      // セッションIDを保存
-      if (response.session_id) {
-        setSessionId(response.session_id);
-      }
+      // APIにメッセージを送信（セッションIDを使用）
+      const response = await apiService.chat.sendMessage(text, sessionId, files);
       
       // AIの応答を表示
       const aiMessage = {
@@ -66,7 +62,7 @@ const ChatArea = ({ isSidebarOpen, onClearMessages }) => {
       // エラーメッセージを表示
       const errorMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'エラーが発生しました。もう一度お試しください。',
+        content: 'エラーが発生しました。LLM設定を確認してください。',
         sender: 'system',
         timestamp: new Date(),
         isError: true,

@@ -5,7 +5,7 @@ import { useSettings } from '@/context/SettingsContext';
 import styles from './LLMSettings.module.css';
 
 const LLMSettings = () => {
-  const { settings, updateLLMSettings } = useSettings();
+  const { settings, sessionId, updateLLMSettings } = useSettings();
   const [formValues, setFormValues] = useState({
     provider: 'azure',
     endpoint: '',
@@ -73,6 +73,15 @@ const LLMSettings = () => {
 
   return (
     <div className={styles.container}>
+      <div className={styles.sessionInfo}>
+        <p className={styles.sessionId}>
+          <strong>現在のセッションID:</strong> {sessionId || '読み込み中...'}
+        </p>
+        <p className={styles.sessionNote}>
+          ※ この設定は現在のセッション専用です。他のユーザーには影響しません。
+        </p>
+      </div>
+      
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formSection}>
           <h3 className={styles.sectionTitle}>LLMプロバイダー</h3>

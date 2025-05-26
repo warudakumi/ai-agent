@@ -3,7 +3,7 @@ import random
 import uuid
 from typing import List, Optional
 
-from app.api.dependencies import get_llm_config
+from app.api.dependencies import get_llm_config, validate_llm_config
 from app.core.error_handler import ErrorSanitizer
 from app.core.session_manager import get_session_manager
 from app.models.chat import ChatResponse, FileUploadResponse
@@ -46,15 +46,36 @@ async def process_message(
             else f"受信メッセージ: {message}"
         )
 
-        # LLM設定を取得
-        llm_config = await get_llm_config()
-
         # セッションIDが提供されていない場合は一時的なIDを生成
         if not session_id:
             session_id = str(uuid.uuid4())
 
-        # セッション管理システムを使用してAgentManagerを取得
+        # セッション管理システムを使用
         session_manager = get_session_manager()
+
+        # セッション別設定を優先使用
+        session_llm_config = session_manager.get_session_llm_config(session_id)
+
+        if session_llm_config:
+            # セッション別設定が存在する場合はそれを使用
+            llm_config = session_llm_config
+            logger.info(
+                f"セッション {session_id} の専用LLM設定を使用します: provider={llm_config.get('provider', 'unknown')}, endpoint={llm_config.get('endpoint', 'N/A')[:50]}..."
+            )
+
+            # セッション別設定の検証
+            await validate_llm_config(llm_config)
+        else:
+            # セッション別設定が存在しない場合はデフォルト設定を使用
+            llm_config = await get_llm_config()
+            logger.warning(
+                f"セッション {session_id} でセッション別設定が見つかりません。デフォルトLLM設定を使用します: provider={llm_config.get('provider', 'unknown')}"
+            )
+            logger.info(
+                f"利用可能なセッション一覧: {session_manager.get_all_session_ids()}"
+            )
+
+        # AgentManagerを取得または作成
         agent_manager = session_manager.get_or_create_agent_manager(
             session_id, llm_config
         )
