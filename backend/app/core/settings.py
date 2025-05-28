@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model_name: str = "gpt-3.5-turbo"
 
+    # ローカルLLM設定
+    local_llm_endpoint: str = "http://localhost:8000"
+    local_llm_model_type: str = "quantized"  # normal または quantized
+
     # 共通LLM設定
     llm_temperature: float = 0.7
 
@@ -77,8 +81,9 @@ class Settings(BaseSettings):
             # ローカルLLM
             return {
                 "provider": "local",
-                "endpoint": "http://localhost:8000",
+                "endpoint": self.local_llm_endpoint,
                 "temperature": self.llm_temperature,
+                "model_type": self.local_llm_model_type,
             }
 
     def update_llm_settings(self, settings: Dict[str, Any]) -> None:
@@ -103,6 +108,13 @@ class Settings(BaseSettings):
                 self.openai_api_key = settings["api_key"]
             if settings.get("model_name"):
                 self.openai_model_name = settings["model_name"]
+
+        # ローカルLLM設定
+        elif self.default_llm_provider == "local":
+            if settings.get("endpoint"):
+                self.local_llm_endpoint = settings["endpoint"]
+            if settings.get("model_type"):
+                self.local_llm_model_type = settings["model_type"]
 
         # 共通設定
         if settings.get("temperature") is not None:

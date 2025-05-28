@@ -27,6 +27,9 @@ class LLMSettings(BaseModel):
     temperature: float = Field(
         0.7, description="生成時の温度パラメータ", ge=0.0, le=1.0
     )
+    model_type: Optional[str] = Field(
+        "quantized", description="ローカルLLMのモデルタイプ（normal または quantized）"
+    )
 
 
 class MSGraphSettings(BaseModel):

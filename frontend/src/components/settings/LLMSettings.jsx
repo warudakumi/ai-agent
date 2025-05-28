@@ -14,6 +14,7 @@ const LLMSettings = () => {
     api_version: '2023-05-15',
     model_name: 'gpt-3.5-turbo',
     temperature: 0.7,
+    model_type: 'quantized',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
@@ -29,6 +30,7 @@ const LLMSettings = () => {
         api_version: settings.llm.api_version || '2023-05-15',
         model_name: settings.llm.model_name || 'gpt-3.5-turbo',
         temperature: settings.llm.temperature || 0.7,
+        model_type: settings.llm.model_type || 'quantized',
       });
     }
   }, [settings]);
@@ -252,6 +254,26 @@ const LLMSettings = () => {
               />
               <p className={styles.helpText}>
                 ローカルLLMのホストとポート (例: http://localhost:8000)
+              </p>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="model_type">
+                モデルタイプ
+              </label>
+              <select
+                id="model_type"
+                name="model_type"
+                value={formValues.model_type}
+                onChange={handleChange}
+                className={styles.select}
+                required
+              >
+                <option value="quantized">量子化モデル (推奨)</option>
+                <option value="normal">通常モデル</option>
+              </select>
+              <p className={styles.helpText}>
+                量子化モデルはメモリ使用量が少なく、高速です
               </p>
             </div>
           </div>

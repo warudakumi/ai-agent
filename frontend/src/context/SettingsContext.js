@@ -34,6 +34,7 @@ const defaultSettings = {
     api_version: '2023-05-15',
     model_name: 'gpt-3.5-turbo', // OpenAI用モデル名
     temperature: 0.7,
+    model_type: 'quantized', // ローカルLLM用モデルタイプ（normal または quantized）
   },
   msgraph: {
     client_id: '',

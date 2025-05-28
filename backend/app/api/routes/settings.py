@@ -25,11 +25,13 @@ async def get_llm_settings():
 
         return LLMSettings(
             provider=llm_settings["provider"],
-            endpoint=llm_settings["endpoint"],
-            api_key=llm_settings["api_key"],
-            deployment_name=llm_settings["deployment_name"],
-            api_version=llm_settings["api_version"],
-            temperature=llm_settings["temperature"],
+            endpoint=llm_settings.get("endpoint"),
+            api_key=llm_settings.get("api_key"),
+            deployment_name=llm_settings.get("deployment_name"),
+            model_name=llm_settings.get("model_name"),
+            api_version=llm_settings.get("api_version", "2023-05-15"),
+            temperature=llm_settings.get("temperature", 0.7),
+            model_type=llm_settings.get("model_type", "quantized"),
         )
 
     except Exception as e:
