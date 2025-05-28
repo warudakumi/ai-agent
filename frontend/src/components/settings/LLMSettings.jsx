@@ -279,30 +279,33 @@ const LLMSettings = () => {
           </div>
         )}
         
-        <div className={styles.formSection}>
-          <h3 className={styles.sectionTitle}>共通設定</h3>
-          
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="temperature">
-              Temperature: {formValues.temperature}
-            </label>
-            <input
-              type="range"
-              id="temperature"
-              name="temperature"
-              min="0"
-              max="1"
-              step="0.1"
-              value={formValues.temperature}
-              onChange={handleChange}
-              className={styles.rangeInput}
-            />
-            <div className={styles.rangeLabels}>
-              <span>精確 (0)</span>
-              <span>創造的 (1)</span>
+        {/* ローカルLLM以外の場合のみTemperature設定を表示 */}
+        {formValues.provider !== 'local' && (
+          <div className={styles.formSection}>
+            <h3 className={styles.sectionTitle}>共通設定</h3>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="temperature">
+                Temperature: {formValues.temperature}
+              </label>
+              <input
+                type="range"
+                id="temperature"
+                name="temperature"
+                min="0"
+                max="1"
+                step="0.1"
+                value={formValues.temperature}
+                onChange={handleChange}
+                className={styles.rangeInput}
+              />
+              <div className={styles.rangeLabels}>
+                <span>精確 (0)</span>
+                <span>創造的 (1)</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         <div className={styles.formActions}>
           <button
